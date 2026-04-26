@@ -387,7 +387,7 @@ export default function Landing() {
               </div>
               <blockquote className="text-xl sm:text-2xl font-medium text-white leading-relaxed mb-6">
                 "FBT Insurance helped me find the perfect LIC plan for my family.
-                The AI recommendations were spot on, and the process was incredibly smooth.
+                The FBT Brain recommendations were spot on, and the process was incredibly smooth.
                 Highly recommended!"
               </blockquote>
               <div>
@@ -496,13 +496,13 @@ function AIPolicyAdvisor() {
         <div className="text-center mb-12">
           <span className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/20 px-4 py-1.5 text-xs font-medium text-purple-200 mb-6">
             <Sparkles className="h-4 w-4 text-purple-300" />
-            Personalized AI Policy Advisor
+            FBT Brain Policy Advisor
           </span>
           <h2 className="text-3xl font-bold sm:text-4xl">
-            Let AI find your perfect plan
+            Let FBT Brain find your perfect plan
           </h2>
           <p className="mt-4 text-lg text-purple-200 max-w-2xl mx-auto">
-            Answer 3 quick questions and our AI will recommend the exact LIC policy for your needs.
+            Answer 3 quick questions and FBT Brain will recommend the exact LIC policy for your needs.
           </p>
         </div>
 
@@ -573,7 +573,7 @@ function AIPolicyAdvisor() {
                   <CheckCircle2 className="h-8 w-8" />
                 </div>
                 <div>
-                  <h3 className="text-sm uppercase tracking-widest text-purple-300 font-semibold mb-2">AI Recommendation</h3>
+                  <h3 className="text-sm uppercase tracking-widest text-purple-300 font-semibold mb-2">FBT Brain Recommendation</h3>
                   <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text gradient-gold mb-4 inline-block">{result.plan}</p>
                   <p className="text-purple-100 max-w-lg mx-auto">{result.desc}</p>
                 </div>

@@ -71,7 +71,7 @@ export default function AiChatWidget() {
                   <Bot className="h-4 w-4 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-900">LIC Assistant</p>
+                  <p className="text-sm font-bold text-gray-900">FBT Brain Assistant</p>
                   <p className="text-[10px] text-gray-400 flex items-center gap-1">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                     Online
