@@ -1,0 +1,224 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("agent")
+  phone        String?
+  avatarUrl    String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  assignedLeads   Lead[]
+  communications  Communication[]
+  followUps       FollowUp[]
+  activityLogs    ActivityLog[]
+}
+
+model Lead {
+  id                  String       @id @default(cuid())
+  fullName            String
+  phone               String       @unique
+  email               String?
+  age                 Int?
+  dateOfBirth         DateTime?
+  gender              String?
+  occupation          String?
+  companyName         String?
+  sector              String?
+  monthlyIncome       Float?
+  maritalStatus       String?
+  familyMembers       Json?
+  existingInsurance   Json?
+  healthStatus        String?
+  investmentGoals     Json?
+  riskAppetite        String?
+  assessmentScore     Int          @default(0)
+  leadScore           Int          @default(0)
+  leadSource          String       @default("website")
+  status              String       @default("new")
+  notes               String?
+  whatsappOptIn       Boolean      @default(false)
+  preferredContactTime String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  assignedToId        String?
+  assignedTo          AdminUser?   @relation(fields: [assignedToId], references: [id])
+
+  policyRecommendations PolicyRecommendation[]
+  premiumCalculations   PremiumCalculation[]
+  communications        Communication[]
+  followUps             FollowUp[]
+  activityLogs          ActivityLog[]
+  leadSegments          LeadSegment[]
+
+  @@index([status])
+  @@index([sector])
+  @@index([leadSource])
+  @@index([createdAt])
+}
+
+model PolicyCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  icon        String?
+  policies    Policy[]
+}
+
+model Policy {
+  id                  String   @id @default(cuid())
+  name                String
+  planNumber          String   @unique
+  description         String
+  features            Json
+  minAge              Int      @default(18)
+  maxAge              Int      @default(65)
+  minSumAssured       Float
+  maxSumAssured       Float
+  minTerm             Int
+  maxTerm             Int
+  premiumFrequency    Json
+  taxBenefits         Json
+  maturityBenefits    String
+  deathBenefits       String
+  loanFacility        Boolean  @default(false)
+  surrenderRules      Json?
+  bestFor             Json
+  isActive            Boolean  @default(true)
+  icon                String?
+  createdAt           DateTime @default(now())
+
+  categoryId          String
+  category            PolicyCategory @relation(fields: [categoryId], references: [id])
+
+  policyRecommendations PolicyRecommendation[]
+  premiumCalculations   PremiumCalculation[]
+}
+
+model PolicyRecommendation {
+  id                      String   @id @default(cuid())
+  recommendedSumAssured   Float
+  recommendedTerm         Int
+  estimatedMonthlyPremium Float
+  estimatedYearlyPremium  Float
+  matchScore              Int
+  matchReasons            Json
+  createdAt               DateTime @default(now())
+
+  leadId                  String
+  lead                    Lead     @relation(fields: [leadId], references: [id])
+
+  policyId                String
+  policy                  Policy   @relation(fields: [policyId], references: [id])
+
+  @@unique([leadId, policyId])
+}
+
+model PremiumCalculation {
+  id                     String   @id @default(cuid())
+  sumAssured             Float
+  term                   Int
+  age                    Int
+  gender                 String
+  monthlyPremium         Float
+  yearlyPremium          Float
+  totalPremiumPaid       Float
+  estimatedMaturityAmount Float?
+  taxSavings80C          Float?
+  taxSavings80D          Float?
+  calculatedAt           DateTime @default(now())
+
+  leadId                 String
+  lead                   Lead     @relation(fields: [leadId], references: [id])
+
+  policyId               String
+  policy                 Policy   @relation(fields: [policyId], references: [id])
+}
+
+model Communication {
+  id              String   @id @default(cuid())
+  type            String
+  messageContent  String
+  status          String   @default("sent")
+  sentAt          DateTime @default(now())
+
+  leadId          String
+  lead            Lead       @relation(fields: [leadId], references: [id])
+
+  adminId         String?
+  admin           AdminUser? @relation(fields: [adminId], references: [id])
+}
+
+model FollowUp {
+  id          String   @id @default(cuid())
+  scheduledAt DateTime
+  type        String
+  status      String   @default("pending")
+  notes       String?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  leadId      String
+  lead        Lead       @relation(fields: [leadId], references: [id])
+
+  assignedToId String
+  assignedTo   AdminUser @relation(fields: [assignedToId], references: [id])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  action    String
+  details   Json?
+  createdAt DateTime @default(now())
+
+  leadId    String
+  lead      Lead       @relation(fields: [leadId], references: [id])
+
+  adminId   String?
+  admin     AdminUser? @relation(fields: [adminId], references: [id])
+}
+
+model Segment {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  criteria    Json
+  createdAt   DateTime @default(now())
+
+  leadSegments LeadSegment[]
+}
+
+model LeadSegment {
+  id        String  @id @default(cuid())
+  leadId    String
+  lead      Lead    @relation(fields: [leadId], references: [id])
+  segmentId String
+  segment   Segment @relation(fields: [segmentId], references: [id])
+
+  @@unique([leadId, segmentId])
+}
+
+model Testimonial {
+  id             String   @id @default(cuid())
+  name           String
+  age            Int
+  occupation     String
+  policyName     String
+  testimonialText String
+  rating         Int      @default(5)
+  photoUrl       String?
+  isFeatured     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+}

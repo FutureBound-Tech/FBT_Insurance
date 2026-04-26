@@ -1,0 +1,16 @@
+{
+  "name": "FBT Insurance",
+  "short_name": "FBT Insure",
+  "description": "Smart Insurance Planning for Your Family's Future",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#1e3a5f",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
