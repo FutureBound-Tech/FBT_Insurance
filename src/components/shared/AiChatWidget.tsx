@@ -17,20 +17,7 @@ const quickQuestions = [
   "Term vs Endowment",
 ];
 
-function getAIResponse(input: string): string {
-  const q = input.toLowerCase();
-  if (q.includes("tax")) return "Section 80C: Deduct up to Rs 1.5L/year on premiums. Section 10(10D): Maturity is tax-free if premium is within limits. Endowment plans offer both benefits.";
-  if (q.includes("term")) return "Term plans (Tech Term Plan 954) give maximum coverage at minimum cost. Example: 30yr old, Rs 1Cr cover is approx Rs 12,000/year. Pure protection for your family.";
-  if (q.includes("child") || q.includes("education")) return "Amritbaal (Plan 974) is designed for children. Premiums paid during childhood, maturity at 18-25. Great for education planning.";
-  if (q.includes("retire") || q.includes("pension")) return "For retirement: Jeevan Shanti (annuity) or Jeevan Umang (Plan 745) which gives 8% of SA yearly after premium paying term.";
-  if (q.includes("best") || q.includes("which") || q.includes("recommend")) return "It depends on your goals! Term = max coverage, Endowment = savings + cover, ULIP = market growth. Try our Free Assessment for personalized recommendations.";
-  if (q.includes("jeevan anand")) return "Jeevan Anand (Plan 715): Lifetime cover even after maturity. Death benefit = 125% of SA + Bonus + FAB. Age 30, 20yr, Rs 10L SA is approx Rs 35,000/year.";
-  if (q.includes("bonus")) return "LIC declares Simple Reversionary Bonus annually (Rs 40-48/1000 SA for endowment). FAB (Final Additional Bonus) paid at maturity for 15+ year policies.";
-  if (q.includes("premium")) return "Premium depends on Age, Term, Sum Assured and plan type. GST: 4.5% first year, 2.25% after. Use the Calculator page for exact figures!";
-  if (q.includes("loan")) return "Most LIC endowment plans offer loan facility after acquiring surrender value. Loan amount is typically 80-90% of surrender value.";
-  if (q.includes("surrender")) return "Surrender value is available after paying minimum premiums (usually 2-3 years). The amount depends on policy term completed and premiums paid.";
-  return "Great question! I'd recommend using our Free Assessment for personalized recommendations based on your profile. You can also try the Calculator to compare different plans.";
-}
+
 
 export default function AiChatWidget() {
   const [open, setOpen] = useState(false);
@@ -38,19 +25,44 @@ export default function AiChatWidget() {
     { role: "bot", text: "Hi! Ask me anything about LIC policies, premiums, tax benefits, or which plan suits you best!" },
   ]);
   const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEnd = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { messagesEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  useEffect(() => { messagesEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, isLoading]);
   useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
 
-  const send = (text: string) => {
-    if (!text.trim()) return;
+  const send = async (text: string) => {
+    if (!text.trim() || isLoading) return;
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", text: text.trim() }]);
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { role: "bot", text: getAIResponse(text) }]);
-    }, 600);
+    
+    const newMessages = [...messages, { role: "user" as const, text: text.trim() }];
+    setMessages(newMessages);
+    setIsLoading(true);
+
+    try {
+      const history = newMessages.slice(1, -1).map(m => ({
+        role: m.role === 'bot' ? 'assistant' : 'user',
+        content: m.text
+      }));
+
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text.trim(), history })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setMessages((prev) => [...prev, { role: "bot", text: data.reply }]);
+      } else {
+        setMessages((prev) => [...prev, { role: "bot", text: "Sorry, I'm having trouble connecting to my servers right now." }]);
+      }
+    } catch (err) {
+      setMessages((prev) => [...prev, { role: "bot", text: "Sorry, I couldn't process that request." }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -104,6 +116,18 @@ export default function AiChatWidget() {
                   </div>
                 </div>
               ))}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 shrink-0 mr-3 mt-0.5">
+                    <Bot className="h-4 w-4 text-blue-600 animate-pulse" />
+                  </div>
+                  <div className="bg-white border border-gray-100 text-gray-500 rounded-2xl rounded-bl-md px-4 py-3 text-sm shadow-sm flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="h-1.5 w-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="h-1.5 w-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+              )}
               <div ref={messagesEnd} />
             </div>
 
@@ -127,10 +151,11 @@ export default function AiChatWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && send(input)}
+                disabled={isLoading}
                 placeholder="Ask about LIC policies..."
                 className="h-10 text-sm flex-1 rounded-xl"
               />
-              <Button onClick={() => send(input)} size="sm" className="h-10 px-4 rounded-xl gradient-gold">
+              <Button onClick={() => send(input)} disabled={isLoading} size="sm" className="h-10 px-4 rounded-xl gradient-gold">
                 <Send className="h-4 w-4" />
               </Button>
             </div>

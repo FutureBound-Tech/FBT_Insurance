@@ -7,6 +7,55 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY || ''
 const GROQ_MODEL = process.env.GROQ_MODEL || 'meta-llama/llama-4-scout-17b-16e-instruct'
 
 // AI-powered policy recommendation
+router.post('/chat', async (req, res) => {
+  try {
+    const { message, history } = req.body;
+
+    const systemPrompt = `You are FBT Brain, an expert LIC (Life Insurance Corporation of India) insurance advisor. 
+You are chatting with a user on the FBT Insurance platform.
+Provide helpful, concise, and accurate answers about LIC policies, premiums, and tax benefits. 
+If asked for recommendations, encourage them to use the Free Assessment tool on the platform.
+Do not hallucinate policy names or details.
+Keep responses to 2-3 short sentences.`;
+
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...(history || []),
+      { role: 'user', content: message }
+    ];
+
+    if (GROQ_API_KEY) {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: GROQ_MODEL,
+          messages,
+          temperature: 0.5,
+          max_tokens: 500,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json() as any;
+        const content = data.choices?.[0]?.message?.content || '';
+        return res.json({ reply: content });
+      } else {
+        throw new Error('Failed to fetch from Groq API');
+      }
+    } else {
+      // Fallback response if no API key
+      return res.json({ reply: "I am FBT Brain. I'd recommend using our Free Assessment for personalized recommendations based on your profile. You can also try the Calculator to compare different plans." });
+    }
+  } catch (error: any) {
+    console.error('Chat API error:', error);
+    res.status(500).json({ error: 'Failed to process chat message' });
+  }
+});
+
 router.post('/recommend', async (req, res) => {
   try {
     const { leadId, profile } = req.body
